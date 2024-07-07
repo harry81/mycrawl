@@ -1,3 +1,7 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
 # Scrapy settings for mycrawl project
 #
 # For simplicity, this file contains only settings considered important or
@@ -17,7 +21,7 @@ NEWSPIDER_MODULE = "mycrawl.spiders"
 #USER_AGENT = "mycrawl (+http://www.yourdomain.com)"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -91,3 +95,20 @@ ROBOTSTXT_OBEY = True
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
+
+
+SELENIUM_DRIVER_NAME = 'chrome'
+SELENIUM_DRIVER_EXECUTABLE_PATH = '/home/hm/bin/chromedriver' # chromedriver 경로 수정 필요
+SELENIUM_DRIVER_ARGUMENTS = [] # ['--headless']  # 헤드리스 모드로 실행
+
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy_selenium.SeleniumMiddleware': 800
+}
+
+
+
+def create_driver():
+    service = Service(SELENIUM_DRIVER_EXECUTABLE_PATH)
+    return webdriver.Chrome(service=service)
+
+SELENIUM_DRIVER_CLASS = create_driver
