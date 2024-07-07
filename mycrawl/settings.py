@@ -1,3 +1,4 @@
+from shutil import which
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -98,7 +99,7 @@ FEED_EXPORT_ENCODING = "utf-8"
 
 
 SELENIUM_DRIVER_NAME = 'chrome'
-SELENIUM_DRIVER_EXECUTABLE_PATH = '/home/hm/bin/chromedriver' # chromedriver 경로 수정 필요
+SELENIUM_DRIVER_EXECUTABLE_PATH = which('chromedriver')
 SELENIUM_DRIVER_ARGUMENTS = [] # ['--headless']  # 헤드리스 모드로 실행
 
 DOWNLOADER_MIDDLEWARES = {
