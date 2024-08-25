@@ -13,6 +13,10 @@ class NaverShoppingSpider(scrapy.Spider):
 
     allowed_domains = ["shopping.naver.com"]
 
+    def __init__(self, *args, **kwargs):
+        super(NaverShoppingSpider, self).__init__(*args, **kwargs)
+        self.keyword = kwargs.get('keyword')
+
     def start_requests(self):
         url = "https://shopping.naver.com/home"
         yield SeleniumRequest(url=url, callback=self.parse)
@@ -20,19 +24,24 @@ class NaverShoppingSpider(scrapy.Spider):
     def parse(self, response):
         driver = response.meta['driver']
 
-        # 검색어 입력
-        search_input = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//input[contains(@class, '_searchInput_search_text_')]"))
-        )
-        search_input.send_keys("노트북")
+        target_banner_xpath = "//div[contains(@class, '_targetBanner_target_banner_')]"
+        target_banner = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, target_banner_xpath)))
+        target_banner.click()
 
-        # 엔터키 입력
+        search_button_xpath = "//button[contains(@class, '_combineHeader_expansion_search_button_')]"
+        search_button = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, search_button_xpath)))
+        search_button.click()
+
+        search_input_xpath = "//input[contains(@class, '_searchInput_input_text')]"
+        search_input = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, search_input_xpath))
+        )
+
+        search_input.send_keys(self.keyword)
         search_input.send_keys(Keys.ENTER)
 
-
-        # 페이지 로딩 대기
         WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'basicList_list_basis__')]"))
+            EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'product_list_item__')]"))
         )
 
         # 스크롤 다운 (더 많은 결과 로딩)
@@ -41,18 +50,19 @@ class NaverShoppingSpider(scrapy.Spider):
             time.sleep(0.5)
 
         # 상품 정보 추출
-        products = driver.find_elements(By.XPATH, "//div[contains(@class, 'product_item__')]")
+        products = driver.find_elements(By.XPATH, "//div[contains(@class, 'product_list_item__')]")
         ret = []
 
         for product in products:
-            title = product.find_element(By.XPATH, ".//a[contains(@class, 'product_link__')]").text
-            price = product.find_element(By.XPATH, ".//span[contains(@class, 'price_num__')]").text
-            # product_compare = product.find_element(By.XPATH, ".//span[contains(@class, 'product_compare__')]").text
+            title = product.find_element(By.XPATH, ".//span[contains(@class, 'product_info_tit')]").text
+            price = product.find_element(By.XPATH, ".//div[contains(@class, 'product_price__')]").text
+            link = product.find_element(By.XPATH, ".//a")
+            link_text = link.get_attribute('href')
 
             item = {
                 'title': title,
                 'price': price,
-                # 'product_compare': product_compare
+                'link': link_text,
             }
             yield item
             ret.append(item)
